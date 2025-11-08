@@ -9,7 +9,7 @@
            background: linear-gradient(135deg,#c8f7d6,#a3e9a6); }
     .card { width:520px; background:#f9fff9; border-radius:18px; padding:28px; box-shadow:0 10px 30px rgba(0,0,0,0.12); text-align:center; }
     h2 { margin:0 0 16px; font-size:22px; }
-    .sentence { background:#fff; border-radius:12px; padding:18px; font-size:18px; min-height:64px; margin-bottom:18px; box-shadow:inset 0 1px 0 rgba(0,0,0,0.02); display:none; } /* Hidden */
+    .sentence { display:none; } /* Ensure sentenceBox is completely hidden */
     .controls { display:flex; gap:12px; justify-content:center; margin-bottom:12px; }
     button { background:#6ad07a; border:none; padding:10px 18px; border-radius:24px; cursor:pointer; font-weight:600; }
     .secondary { background:#9be8a6; }
@@ -21,7 +21,7 @@
 <body>
   <div class="card">
     <h2>🎧 Listening Skill Tester — Hearing Challenge</h2>
-    <div id="sentenceBox" class="sentence">Loading sentence…</div> <!-- Hidden but needed for structure -->
+    <div id="sentenceBox" class="sentence"></div> <!-- Empty and hidden -->
     <div class="controls">
       <button id="speakBtn">🎙 Speak Now</button>
       <button id="playBtn">🔊 Play Again</button>
@@ -103,18 +103,19 @@ async function prefillPool(n) {
 
 async function loadSentence() {
   resultDiv.textContent = '';
-  sentenceBox.textContent = 'Loading sentence…'; // Still sets but hidden
   try {
     if (!pool || pool.length === 0) {
       const s = await fetchOneSentenceWithTimeout(4000);
       if (s) {
         currentSentence = s;
+        playSentence(); // Play immediately on load
         return;
       }
     } else {
       currentSentence = pool.shift();
       pool.push(currentSentence);
       localStorage.setItem(POOL_KEY, JSON.stringify(pool));
+      playSentence(); // Play immediately on load
       return;
     }
   } catch (err) {
@@ -122,6 +123,7 @@ async function loadSentence() {
   }
 
   currentSentence = fallbackSentences[Math.floor(Math.random() * fallbackSentences.length)];
+  playSentence(); // Play immediately on load
   resultDiv.textContent = 'New sentence loaded. Listen and speak!';
 }
 
@@ -165,7 +167,7 @@ function startListening() {
   recognition.onresult = function (event) {
     const spoken = event.results[0][0].transcript;
     analyzeSpeech(spoken);
-    playSentence(); // Play the sentence back after user speaks
+    playSentence(); // Play back after user speaks
   };
 
   recognition.onerror = function (ev) {
